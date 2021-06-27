@@ -81,3 +81,11 @@ ok install-console banner
 
 If the output on the screen is unreadable, simply blind type `+ttya output+`
 and the output should return to the `tip` connection.
+
+
+Making the Changes Permanent
+----------------------------
+I have replaced the PROM on one of my TurboGX+ cards with a PLCC-32 socket.
+This way it is easy to switch between different FCode versions.
+
+link:{imagesdir}tgx+-mod.jpg[image:tgx+-mod.jpg["Modified TurboGX+",width=50%]]
