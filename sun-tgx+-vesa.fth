@@ -199,7 +199,7 @@ defer (confused?
 
 	display-width case
 	d# 1024 of  ffff.e3ff 0 fhc@ and 0         fhc!  endof
-	d# 1152 of  ffff.e3ff 0 fhc@ and 8000 or 0 fhc!  endof
+	d# 1152 of  ffff.e3ff 0 fhc@ and 0800 or 0 fhc!  endof
 	d# 1280 of  ffff.e3ff 0 fhc@ and 1000 or 0 fhc!  endof
 	d# 1600 of  ffff.e3ff 0 fhc@ and 1800 or 0 fhc!  endof
 	d# 1920 of  ffff.e3ff 0 fhc@ and 0400 or 0 fhc!  endof
