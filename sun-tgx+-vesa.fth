@@ -265,13 +265,22 @@ variable tmp-blit
 ;
 
 
+\ Make this external so we can clear the screen of non-console framebuffers
+\ without needing to have fcode-debug? = true set.
+external
+
+\ Clear screen by filling a rectangle with the background-color.
 : lego-erase-screen
 	cg6-save
 
-	0 0 screen-width screen-height background-color rect-fill
+	\ the original source uses screen-width and screen-height, but they
+	\ don't seem to get set up correctly.
+	0 0 display-width display-height background-color rect-fill
 
 	cg6-restore
 ;
+
+headers
 
 
 : lego-video-on  818 thc@ 400 or                818 thc! ;
