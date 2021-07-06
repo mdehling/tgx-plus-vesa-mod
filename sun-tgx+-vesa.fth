@@ -71,7 +71,7 @@ defer (confused?
 
 
 : my-attribute
-	fcode-revision 2000 <  if
+	fcode-revision 2000 < if
 		2drop 2drop
 	else
 		my-reset 0= if
@@ -84,7 +84,7 @@ defer (confused?
 
 
 : my-xdrint
-	my-reset 0=  if
+	my-reset 0= if
 		encode-int
 	else
 		0
@@ -130,9 +130,9 @@ defer (confused?
 : alt! alt-adr + l! ;
 
 
-: fbc-busy-wait begin  10 fbc@ 10000000 and 0= until ;
-: fbc-draw-wait begin  14 fbc@ 20000000 and 0= until ;
-: fbc-blit-wait begin  18 fbc@ 20000000 and 0= until ;
+: fbc-busy-wait begin  10 fbc@ 1000.0000 and 0= until ;
+: fbc-draw-wait begin  14 fbc@ 2000.0000 and 0= until ;
+: fbc-blit-wait begin  18 fbc@ 2000.0000 and 0= until ;
 
 
 : background-color
@@ -173,15 +173,17 @@ defer (confused?
 	fbc-busy-wait
 
 	ffff.ffff 10 fbc!
+
 	0 4 tec!
+
 	0 8 fbc!
-	0 c0 fbc! 0 c4 fbc!
-	0 d0 fbc! 0 d4 fbc!
-	0 e0 fbc! 0 e4 fbc!
+	0 c0 fbc!  0 c4 fbc!
+	0 d0 fbc!  0 d4 fbc!
+	0 e0 fbc!  0 e4 fbc!
 
 	0000.00ff 100 fbc!	0000.0000 104 fbc!
 
-	a9806c60 108 fbc!
+	a980.6c60 108 fbc!
 
 	0000.00ff 10c fbc!	ffff.ffff 110 fbc!
 	0000.0000 11c fbc!	ffff.ffff 120 fbc!
@@ -190,7 +192,7 @@ defer (confused?
 	ffff.ffff 134 fbc!	ffff.ffff 138 fbc!
 	ffff.ffff 13c fbc!
 
-	229540 4 fbc!
+	0022.9540 4 fbc!
 
 	display-width 1 -   f0 fbc!
 	display-height 1 -  f4 fbc!
@@ -207,20 +209,22 @@ defer (confused?
 
 
 : cg6-save
-   fbc-busy-wait c0 fbc@ c4 fbc@ d0 fbc@ d4 fbc@ e0
-   fbc@ e4 fbc@ 8 fbc@ 100 fbc@ 104 fbc@ 108 fbc@
-   10c fbc@ 110 fbc@ 4 fbc@ f0 fbc@ f4 fbc@ 80
-   fbc@ 84 fbc@ 90 fbc@ 94 fbc@ a0 fbc@ a4 fbc@ b0
-   fbc@ b4 fbc@ init-blit-reg
+	fbc-busy-wait
+
+	c0 fbc@ c4 fbc@ d0 fbc@ d4 fbc@ e0 fbc@ e4 fbc@ 8 fbc@ 100 fbc@ 104
+	fbc@ 108 fbc@ 10c fbc@ 110 fbc@ 4 fbc@ f0 fbc@ f4 fbc@ 80 fbc@ 84 fbc@
+	90 fbc@ 94 fbc@ a0 fbc@ a4 fbc@ b0 fbc@ b4 fbc@
+
+	init-blit-reg
 ;
 
 
 : cg6-restore
-   fbc-busy-wait b4 fbc! b0 fbc! a4 fbc! a0 fbc! 94
-   fbc! 90 fbc! 84 fbc! 80 fbc! f4 fbc! f0 fbc! 40
-   or 4 fbc! 110 fbc! 10c fbc! 108 fbc! 104 fbc! 100
-   fbc! 8 fbc! e4 fbc! e0 fbc! d4 fbc! d0 fbc! c4
-   fbc! c0 fbc!
+	fbc-busy-wait
+
+	b4 fbc! b0 fbc! a4 fbc! a0 fbc! 94 fbc! 90 fbc! 84 fbc! 80 fbc! f4
+	fbc! f0 fbc! 40 or 4 fbc! 110 fbc! 10c fbc! 108 fbc! 104 fbc! 100 fbc!
+	8 fbc! e4 fbc! e0 fbc! d4 fbc! d0 fbc! c4 fbc! c0 fbc!
 ;
 
 
@@ -234,9 +238,9 @@ variable tmp-blit
 
 
 : lego-delete-lines
-   dup #lines <  if
+   dup #lines < if
       tmp-blit ! cg6-save tmp-blit @ >r 0 line# r@ + #columns #lines 0
-      line# #columns #lines r@ - line# r@ + #lines <  if
+      line# #columns #lines r@ - line# r@ + #lines < if
          lego-blit
       else
          2drop 2drop 2drop 2drop
@@ -250,7 +254,7 @@ variable tmp-blit
 
 
 : lego-insert-lines
-   dup #lines <  if
+   dup #lines < if
       tmp-blit ! cg6-save tmp-blit @ >r 0 line# #columns #lines r@ - 0
       line# r@ + #columns #lines lego-blit 0 line# #columns line# r> +
       char-fill cg6-restore
@@ -270,11 +274,11 @@ variable tmp-blit
 ;
 
 
-: lego-video-on  818 thc@ 400 or               818 thc! ;
-: lego-video-off 818 thc@ fffffbff and 1000 or 818 thc! ;
+: lego-video-on  818 thc@ 400 or                818 thc! ;
+: lego-video-off 818 thc@ ffff.fbff and 1000 or 818 thc! ;
 
-: lego-sync-on  818 thc@ 80 or        818 thc! ;
-: lego-sync-off 818 thc@ ffffff7f and 818 thc! ;
+: lego-sync-on  818 thc@ 80 or         818 thc! ;
+: lego-sync-off 818 thc@ ffff.ff7f and 818 thc! ;
 
 : delay-100 3e8 ms ;
 
@@ -291,8 +295,9 @@ variable tmp-blit
 
 
 : ?fhc-thc-map
-	fhc -1 =  if
-		-1 to mapped? fhc-thc-map
+	fhc -1 = if
+		-1 to mapped?
+		fhc-thc-map
 	else
 		0 to mapped?
 	then
@@ -300,8 +305,9 @@ variable tmp-blit
 
 
 : ?fhc-thc-unmap
-	mapped?  if
-		fhc-thc-unmap 0 to mapped?
+	mapped? if
+		fhc-thc-unmap
+		0 to mapped?
 	then
 ;
 
@@ -317,8 +323,9 @@ variable tmp-blit
 
 
 : ?alt-map
-	alt-adr -1 =  if
-		-1 to alt-mapped? alt-map
+	alt-adr -1 = if
+		-1 to alt-mapped?
+		alt-map
 	else
 		0 to alt-mapped?
 	then
@@ -326,8 +333,9 @@ variable tmp-blit
 
 
 : ?alt-unmap
-	alt-mapped?  if
-		alt-unmap 0 to alt-mapped?
+	alt-mapped? if
+		alt-unmap
+		0 to alt-mapped?
 	then
 ;
 
@@ -453,11 +461,24 @@ headers
 
 
 : oscillators
-	d# 268.500.000  d# 216.000.000  d# 193.000.000  d# 189.000.000
-	d# 162.000.000  d# 154.000.000  d# 148.500.000  d# 135.000.000
-	d# 118.125.000  d# 108.000.000  d# 106.500.000  d#  94.500.000
-	d#  84.375.000  d#  81.000.000  d#  74.250.000  d#  64.125.000
-	d#  54.000.000  d#  47.250.000
+	d# 268.500.000
+	d# 216.000.000
+	d# 193.000.000
+	d# 189.000.000
+	d# 162.000.000
+	d# 154.000.000
+	d# 148.500.000
+	d# 135.000.000
+	d# 118.125.000
+	d# 108.000.000
+	d# 106.500.000
+	d#  94.500.000
+	d#  84.375.000
+	d#  81.000.000
+	d#  74.250.000
+	d#  64.125.000
+	d#  54.000.000
+	d#  47.250.000
 	12
 ;
 
@@ -491,25 +512,25 @@ headers
 
 : setup-oscillator
 	?alt-map case
-		0 of  ics47   endof
-		1 of  ics54   endof
-		2 of  ics64   endof
-		3 of  ics74   endof
-		4 of  ics81   endof
-		5 of  ics84   endof
-		6 of  ics94   endof
-		7 of  ics106  endof
-		8 of  ics108  endof
-		9 of  ics118  endof
-		a of  ics135  endof
-		b of  ics148  endof
-		c of  ics154  endof
-		d of  ics162  endof
-		e of  ics189  endof
-		f of  ics193  endof
+		0  of  ics47   endof
+		1  of  ics54   endof
+		2  of  ics64   endof
+		3  of  ics74   endof
+		4  of  ics81   endof
+		5  of  ics84   endof
+		6  of  ics94   endof
+		7  of  ics106  endof
+		8  of  ics108  endof
+		9  of  ics118  endof
+		a  of  ics135  endof
+		b  of  ics148  endof
+		c  of  ics154  endof
+		d  of  ics162  endof
+		e  of  ics189  endof
+		f  of  ics193  endof
 		10 of  ics216  endof
 		11 of  ics268  endof
-		drop  ics94 0
+		drop   ics94 0
 	endcase
 
 	0 d ics-write
@@ -542,7 +563,7 @@ variable dpl
 
 
 : compare-strings
-   rot tuck <  if
+   rot tuck < if
       drop 2drop 0
    else
       comp 0=
@@ -600,7 +621,7 @@ variable dpl
 
 
 : left-parse-string'
-   left-parse-string 2 pick 0=  if
+   left-parse-string 2 pick 0= if
       2swap
    then
 ;
@@ -647,7 +668,7 @@ headers
 
 : parse-string
    to tmp-len to tmp-addr to tmp-flag flag-strings 0 do
-   tmp-addr tmp-len 2swap compare-strings  if
+   tmp-addr tmp-len 2swap compare-strings if
       1 i lshift tmp-flag + to tmp-flag
    then  loop  tmp-flag
 ;
@@ -663,9 +684,9 @@ headers
 
 : parse-line
    b 0 do  2c left-parse-string tmp-pack-string pack dup number
-   swap drop -rot dup 0=  if
+   swap drop -rot dup 0= if
       leave
-   then  loop  dup 0<>  if
+   then  loop  dup 0<> if
       parse-flags
    else
       2drop 0
@@ -674,9 +695,9 @@ headers
 
 
 : cycles-per-tran
-   1add30 ppc * /mod swap 0<>  if
+   1add30 ppc * /mod swap 0<> if
       1 +
-   then  4 - dup f >  if
+   then  4 - dup f > if
       drop f
    then
 ;
@@ -739,13 +760,13 @@ headers
 
 	dup mainosc? cycles-per-tran
 
-	818 thc@ fffffff0 and or 818 thc!
+	818 thc@ ffff.fff0 and or 818 thc!
 
 	0 to dblbuf?
-	94 thc@ 2000000 invert and
+	94 thc@ 0200.0000 invert and
 
 	display-width display-height * 2 * /vmsize 100000 * <= if
-		2000000 or 1 to dblbuf?
+		0200.0000 or 1 to dblbuf?
 	then
 
 	94 thc!
@@ -792,7 +813,7 @@ headers
 	?fhc-thc-map
 
 	8000 0 fhc!
-	1ff 0 fhc!
+	01ff 0 fhc!
 
 	chip-rev case
 	5 of  enable-disables 0 fhc@ 10000 or 0 fhc! disable-disables  endof
@@ -802,7 +823,7 @@ headers
 	      enable-disables 0 fhc@ 10000 or 0 fhc! disable-disables
 	endcase
 
-	ffe0ffe0 8fc thc!
+	ffe0.ffe0 8fc thc!
 
 	?fhc-thc-unmap
 ;
@@ -861,7 +882,7 @@ headers
 
 
 : ?lego-error
-   2swap <>  if
+   2swap <> if
       2 to lego-status diagnostic-type "  r/w failed"
    else
       2drop
@@ -870,7 +891,7 @@ headers
 
 
 : lego-register-test
-   selftest-map  if
+   selftest-map if
       fb-map
    then  8 fbc@ 35 100 fbc! ca 104 fbc! 12345678
    110 fbc! 96969696 84 fbc! 69696969 80 fbc! 3c3c3c3c
@@ -883,39 +904,39 @@ headers
    " FBC_Y0" ?lego-error 80 fbc@ 69696969 " FBC_X0" ?lego-error
    90 fbc@ 3c3c3c3c " FBC_RASTEROP" ?lego-error ff 110
    fbc! 0 84 fbc! 0 80 fbc! 1f 90 fbc! 55555555 1c
-   fbc! 8 fbc! selftest-map  if
+   fbc! 8 fbc! selftest-map if
       fb-unmap
    then
 ;
 
 
 : lego-fbc-test
-   selftest-map  if
+   selftest-map if
       fb-map
    then  "  Font test" diagnostic-type 8 0 do  i 4 * fb-addr
-   + @ ff00ff <>  if
+   + @ ff00ff <> if
       1 to lego-status " Fonting to DFB error" diagnostic-type
 
-   then  loop  selftest-map  if
+   then  loop  selftest-map if
       fb-unmap
    then
 ;
 
 
 : lego-fb-test
-   selftest-map  if
+   selftest-map if
       fb-map
    then  ffffffff mask ! 0 group-code ! fb-addr /frame memory-test-suite
-    if
+ if
       1 to lego-status
-   then  selftest-map  if
+   then  selftest-map if
       fb-unmap
    then
 ;
 
 
 : lego-selftest
-   fb-addr -1 =  if
+   fb-addr -1 = if
       -1 to selftest-map
    else
       0 to selftest-map
@@ -1002,7 +1023,7 @@ headers
 
 
 : lego-reset-screen
-   -1 to my-reset fcode-revision 2000 >=  if
+   -1 to my-reset fcode-revision 2000 >= if
       strap-value 94 thc! delay-value 90 thc! lego-erase-screen
       monitor-string set-resolution
    then  lego-video-on 0 to my-reset
@@ -1044,7 +1065,7 @@ headers
 : lego-install
    fb-map init-blit-reg default-font set-font fb-addr to frame-buffer-adr
    fb-addr encode-int " address" property
-   my-args dup 0<>  if
+   my-args dup 0<> if
       set-resolution
    else
       2drop

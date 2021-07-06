@@ -4,105 +4,106 @@ offset16
 hex
 
 
-" cgsix" encode-string " name" property
-" SUNW,501-2253" model " display" device-type 
+" cgsix"		name
+" SUNW,501-2253"	model
+" display"		device-type
 
-: copyright " Copyright (c) 1991 by Sun Microsystems, Inc. " ;
-: sccsid " @(#)TurboGX 2.0" ;
+: copyright	" Copyright (c) 1991 by Sun Microsystems, Inc. " ;
+: sccsid	" @(#)TurboGX 2.0" ;
 
- 
-variable legosc-address  
- 
+
+variable legosc-address
+
 : map-slot swap legosc-address @ + swap map-low ;
 
-1 constant dblbuf? 
-h# 4 constant /vmsize 
-h# a1 constant bdrev 
+1	constant dblbuf?
+4	constant /vmsize
+a1	constant bdrev
 
-h# 8 value ppc 
-h# d327e value strap-value 
-h# 17300 value delay-value 
+8	value ppc
+d327e	value strap-value
+17300	value delay-value
 
-h# 4 constant lengthloc
-h# 10 constant /dac
-h# 8000 constant /prom
-h# 58a28d4 constant mainosc
+4	constant lengthloc
+10	constant /dac
+8000	constant /prom
+58a28d4	constant mainosc
 
--1 value dac-adr 
--1 value prom-adr 
--1 value alt-adr 
--1 value ptr 
--1 value logo 
--1 value fhc 
--1 value thc 
--1 value fbc-adr 
--1 value fb-addr 
--1 value tec 
--1 value tmp-len 
--1 value tmp-addr 
--1 value tmp-flag 
--1 value selftest-map 
-0 value my-reset 
-0 value mapped? 
-0 value alt-mapped? 
-h# 200000 value /frame 
-h# 100 alloc-mem constant data-space 
+-1	value dac-adr
+-1	value prom-adr
+-1	value alt-adr
+-1	value ptr
+-1	value logo
+-1	value fhc
+-1	value thc
+-1	value fbc-adr
+-1	value fb-addr
+-1	value tec
+-1	value tmp-len
+-1	value tmp-addr
+-1	value tmp-flag
+-1	value selftest-map
+0	value my-reset
+0	value mapped?
+0	value alt-mapped?
+200000	value /frame
+
+100 alloc-mem	constant data-space
 
 
 external
 
-0 value display-width 
-0 value display-height 
--1 value acceleration 
+0	value display-width
+0	value display-height
+-1	value acceleration
 
 headers
 
 
-0 value lego-status 
-0 value sense-id-value 
-0 value chip-rev 
+0	value lego-status
+0	value sense-id-value
+0	value chip-rev
 
- 
-defer (set-fbconfiguration 
 
- 
-defer (confused? 
+defer (set-fbconfiguration
 
- 
-: my-attribute 
-   fcode-revision h# 2000 <  if  
-      2drop 2drop 
-   else 
-      my-reset 0 =  if  
-         property
-         
-      else 
-         2drop 2drop 
-      then  
-   then  
+
+defer (confused?
+
+
+: my-attribute
+	fcode-revision 2000 < if
+		2drop 2drop
+	else
+		my-reset 0 = if
+			property
+		else
+			2drop 2drop
+		then
+	then
 ;
 
- 
-: my-xdrint 
-   my-reset 0=  if  
-      encode-int 
-   else 
-      0 
-   then  
+
+: my-xdrint
+	my-reset 0= if
+		encode-int
+	else
+		0
+	then
 ;
 
- 
-: my-xdrstring 
-   my-reset 0=  if  
-      encode-string 
-   then  
+
+: my-xdrstring
+	my-reset 0= if
+		encode-string
+	then
 ;
 
- 
+
 : length@ prom-adr lengthloc + l@ ;
 
- 
-: logo-data 
+
+: logo-data
 	prom-adr length@ +
 
 	begin
@@ -112,7 +113,7 @@ defer (confused?
 	repeat
 ;
 
- 
+
 : fbc! fbc-adr + l! ;
 : fbc@ fbc-adr + l@ ;
 
@@ -126,210 +127,243 @@ defer (confused?
 
 : dac! dac-adr + l! ;
 : dac@ dac-adr + l@ ;
- 
+
 : alt! alt-adr + l! ;
 
 
-: fbc-busy-wait begin  h# 10 fbc@ h# 10000000 and 0= until ;
+: fbc-busy-wait begin  10 fbc@ 1000.0000 and 0= until ;
+: fbc-draw-wait begin  14 fbc@ 2000.0000 and 0= until ;
+: fbc-blit-wait begin  18 fbc@ 2000.0000 and 0= until ;
 
-: fbc-draw-wait begin  h# 14 fbc@ h# 20000000 and 0= until ;
 
-: fbc-blit-wait begin  h# 18 fbc@ h# 20000000 and 0= until ;
-
- 
-: background-color 
-   inverse-screen?  if  
-      h# ff 
-   else 
-      0 
-   then  
+: background-color
+	inverse-screen? if
+		ff
+	else
+		0
+	then
 ;
 
- 
-: rect-fill 
-   fbc-busy-wait h# 100 fbc! 2swap h# 904 fbc! h# 900 fbc! h# 904 
-   fbc! h# 900 fbc! fbc-draw-wait fbc-busy-wait h# ff h# 100 fbc! 
+
+: rect-fill
+	fbc-busy-wait
+
+	100 fbc!
+	2swap
+	904 fbc! 900 fbc!
+	904 fbc! 900 fbc!
+
+	fbc-draw-wait
+	fbc-busy-wait
+
+	ff 100 fbc!
 ;
 
- 
-: >pixel 
-   swap char-width * window-left + swap char-height * window-top 
-   + 
+
+: >pixel
+	swap char-width * window-left + swap char-height * window-top +
 ;
 
- 
-: char-fill 
-   2swap >pixel 2swap >pixel background-color rect-fill 
+
+: char-fill
+	2swap >pixel 2swap >pixel background-color rect-fill
 ;
 
- 
-: init-blit-reg 
-   fbc-busy-wait h# ffffffff h# 10 fbc! 0 h# 4 tec! h# 0 h# 8 fbc! 
-   h# 0 h# c0 fbc! h# 0 h# c4 fbc! h# 0 h# d0 fbc! h# 0 h# d4 fbc! 
-   h# 0 h# e0 fbc! h# 0 h# e4 fbc! h# ff h# 100 fbc! h# 0 h# 104 
-   fbc! h# a9806c60 h# 108 fbc! h# ff h# 10c fbc! h# ffffffff h# 110 
-   fbc! h# 0 h# 11c fbc! h# ffffffff h# 120 fbc! h# ffffffff h# 124 
-   fbc! h# ffffffff h# 128 fbc! h# ffffffff h# 12c fbc! h# ffffffff 
-   h# 130 fbc! h# ffffffff h# 134 fbc! h# ffffffff h# 138 fbc! h# ffffffff 
-   h# 13c fbc! h# 229540 h# 4 fbc! display-width 1 - h# f0 fbc! display-height 
-   1 - h# f4 fbc!
-   display-width case 
-      h# 400 of h# ffffe3ff 0 fhc@ and 0 fhc! endof 
-      h# 480 of h# ffffe3ff 0 fhc@ and h# 800 or 0 fhc! endof 
-      h# 500 of h# ffffe3ff 0 fhc@ and h# 1000 or 0 fhc! endof 
-      h# 640 of h# ffffe3ff 0 fhc@ and h# 1800 or 0 fhc! endof 
-      h# 780 of h# ffffe3ff 0 fhc@ and h# 400 or 0 fhc! endof 
-   endcase 
+
+: init-blit-reg
+	fbc-busy-wait
+
+	ffff.ffff 10 fbc!
+
+	0 4 tec!
+
+	00 8 fbc!
+	00 c0 fbc!  00 c4 fbc!
+	00 d0 fbc!  00 d4 fbc!
+	00 e0 fbc!  00 e4 fbc!
+
+	0000.00ff 100 fbc!	0000.0000 104 fbc!
+
+	a980.6c60 108 fbc!
+
+	0000.00ff 10c fbc!	ffff.ffff 110 fbc!
+	0000.0000 11c fbc!	ffff.ffff 120 fbc!
+	ffff.ffff 124 fbc!	ffff.ffff 128 fbc!
+	ffff.ffff 12c fbc!	ffff.ffff 130 fbc!
+	ffff.ffff 134 fbc!	ffff.ffff 138 fbc!
+	ffff.ffff 13c fbc!
+
+	0022.9540 4 fbc!
+
+	display-width 1 -   f0 fbc!
+	display-height 1 -  f4 fbc!
+
+	display-width case
+	d# 1024 of  ffff.e3ff 0 fhc@ and 0         fhc!  endof
+	d# 1152 of  ffff.e3ff 0 fhc@ and 0800 or 0 fhc!  endof
+	d# 1280 of  ffff.e3ff 0 fhc@ and 1000 or 0 fhc!  endof
+	d# 1600 of  ffff.e3ff 0 fhc@ and 1800 or 0 fhc!  endof
+	d# 1920 of  ffff.e3ff 0 fhc@ and 0400 or 0 fhc!  endof
+	endcase
 ;
 
- 
-: cg6-save 
-   fbc-busy-wait h# c0 fbc@ h# c4 fbc@ h# d0 fbc@ h# d4 fbc@ h# e0 
-   fbc@ h# e4 fbc@ h# 8 fbc@ h# 100 fbc@ h# 104 fbc@ h# 108 fbc@ 
-   h# 10c fbc@ h# 110 fbc@ h# 4 fbc@ h# f0 fbc@ h# f4 fbc@ h# 80 
-   fbc@ h# 84 fbc@ h# 90 fbc@ h# 94 fbc@ h# a0 fbc@ h# a4 fbc@ h# b0 
-   fbc@ h# b4 fbc@ init-blit-reg 
+
+: cg6-save
+	fbc-busy-wait
+
+	c0 fbc@ c4 fbc@ d0 fbc@ d4 fbc@ e0 fbc@ e4 fbc@ 8 fbc@ 100 fbc@ 104
+	fbc@ 108 fbc@ 10c fbc@ 110 fbc@ 4 fbc@ f0 fbc@ f4 fbc@ 80 fbc@ 84 fbc@
+	90 fbc@ 94 fbc@ a0 fbc@ a4 fbc@ b0 fbc@ b4 fbc@
+
+	init-blit-reg
 ;
 
- 
-: cg6-restore 
-   fbc-busy-wait h# b4 fbc! h# b0 fbc! h# a4 fbc! h# a0 fbc! h# 94 
-   fbc! h# 90 fbc! h# 84 fbc! h# 80 fbc! h# f4 fbc! h# f0 fbc! h# 40 
-   or h# 4 fbc! h# 110 fbc! h# 10c fbc! h# 108 fbc! h# 104 fbc! h# 100 
-   fbc! h# 8 fbc! h# e4 fbc! h# e0 fbc! h# d4 fbc! h# d0 fbc! h# c4 
-   fbc! h# c0 fbc! 
+
+: cg6-restore
+	fbc-busy-wait
+
+	b4 fbc! b0 fbc! a4 fbc! a0 fbc! 94 fbc! 90 fbc! 84 fbc! 80 fbc! f4
+	fbc! f0 fbc! 40 or 4 fbc! 110 fbc! 10c fbc! 108 fbc! 104 fbc! 100 fbc!
+	8 fbc! e4 fbc! e0 fbc! d4 fbc! d0 fbc! c4 fbc! c0 fbc!
 ;
 
- 
-variable tmp-blit  
- 
-: lego-blit 
-   fbc-busy-wait >pixel 1 - h# b4 fbc! 1 - h# b0 fbc! >pixel h# a4 
-   fbc! h# a0 fbc! >pixel 1 - h# 94 fbc! 1 - h# 90 fbc! >pixel h# 84 
-   fbc! h# 80 fbc! fbc-blit-wait fbc-busy-wait 
+
+variable tmp-blit
+
+: lego-blit
+   fbc-busy-wait >pixel 1 - b4 fbc! 1 - b0 fbc! >pixel a4
+   fbc! a0 fbc! >pixel 1 - 94 fbc! 1 - 90 fbc! >pixel 84
+   fbc! 80 fbc! fbc-blit-wait fbc-busy-wait
 ;
 
- 
-: lego-delete-lines 
-   dup #lines <  if  
-      tmp-blit ! cg6-save tmp-blit @ >r 0 line# r@ + #columns #lines 0 
-      line# #columns #lines r@ - line# r@ + #lines <  if  
-         lego-blit 
-      else 
-         2drop 2drop 2drop 2drop 
+
+: lego-delete-lines
+   dup #lines < if
+      tmp-blit ! cg6-save tmp-blit @ >r 0 line# r@ + #columns #lines 0
+      line# #columns #lines r@ - line# r@ + #lines < if
+         lego-blit
+      else
+         2drop 2drop 2drop 2drop
       then
-      0 #lines r> - #columns #lines char-fill cg6-restore 
-   else 
-      tmp-blit ! cg6-save tmp-blit @ 0 swap #lines swap - #columns 
-      #lines char-fill cg6-restore 
-   then  
+      0 #lines r> - #columns #lines char-fill cg6-restore
+   else
+      tmp-blit ! cg6-save tmp-blit @ 0 swap #lines swap - #columns
+      #lines char-fill cg6-restore
+   then
 ;
 
- 
-: lego-insert-lines 
-   dup #lines <  if  
-      tmp-blit ! cg6-save tmp-blit @ >r 0 line# #columns #lines r@ - 0 
-      line# r@ + #columns #lines lego-blit 0 line# #columns line# r> + 
-      char-fill cg6-restore 
-   else 
-      tmp-blit ! cg6-save tmp-blit @ 0 swap line# swap #columns swap 
-      line# swap + char-fill cg6-restore 
-   then  
+
+: lego-insert-lines
+   dup #lines < if
+      tmp-blit ! cg6-save tmp-blit @ >r 0 line# #columns #lines r@ - 0
+      line# r@ + #columns #lines lego-blit 0 line# #columns line# r> +
+      char-fill cg6-restore
+   else
+      tmp-blit ! cg6-save tmp-blit @ 0 swap line# swap #columns swap
+      line# swap + char-fill cg6-restore
+   then
 ;
 
- 
-: lego-erase-screen 
-   cg6-save 0 0 screen-width screen-height background-color rect-fill 
-   cg6-restore 
+
+: lego-erase-screen
+	cg6-save
+
+	0 0 screen-width screen-height background-color rect-fill
+
+	cg6-restore
 ;
 
- 
-: lego-video-on h# 818 thc@ h# 400 or h# 818 thc! ;
-: lego-video-off h# 818 thc@ h# fffffbff and h# 1000 or h# 818 thc! ;
 
-: lego-sync-on h# 818 thc@ h# 80 or h# 818 thc! ;
-: lego-sync-off h# 818 thc@ h# ffffff7f and h# 818 thc! ;
+: lego-video-on  818 thc@ 400 or                818 thc! ;
+: lego-video-off 818 thc@ ffff.fbff and 1000 or 818 thc! ;
 
-: delay-100 h# 3e8 ms ;
+: lego-sync-on  818 thc@ 80 or         818 thc! ;
+: lego-sync-off 818 thc@ ffff.ff7f and 818 thc! ;
 
-: lego-sync-reset h# 818 thc@ h# 1000 or h# 818 thc! delay-100 ;
+: delay-100 3e8 ms ;
 
-: prom-map 0 /prom map-slot b(to) prom-adr ;
-: prom-unmap prom-adr /prom free-virtual -1 b(to) prom-adr ;
+: lego-sync-reset 818 thc@ 1000 or 818 thc! delay-100 ;
 
-: dac-map h# 200000 /dac map-slot b(to) dac-adr ;
-: dac-unmap dac-adr /dac free-virtual -1 b(to) dac-adr ;
+: prom-map 0 /prom map-slot to prom-adr ;
+: prom-unmap prom-adr /prom free-virtual -1 to prom-adr ;
 
-: fhc-thc-map h# 300000 h# 2000 map-slot b(to) fhc fhc h# 1000 + b(to) thc ;
-: fhc-thc-unmap fhc h# 2000 free-virtual -1 b(to) fhc -1 b(to) thc ;
+: dac-map 200000 /dac map-slot to dac-adr ;
+: dac-unmap dac-adr /dac free-virtual -1 to dac-adr ;
+
+: fhc-thc-map 300000 2000 map-slot to fhc fhc 1000 + to thc ;
+: fhc-thc-unmap fhc 2000 free-virtual -1 to fhc -1 to thc ;
 
 
-: ?fhc-thc-map 
-   fhc -1 =  if  
-      -1 b(to) mapped? fhc-thc-map 
-   else 
-      0 b(to) mapped? 
-   then  
+: ?fhc-thc-map
+	fhc -1 = if
+		-1 to mapped?
+		fhc-thc-map
+	else
+		0 to mapped?
+	then
 ;
 
- 
-: ?fhc-thc-unmap 
-   mapped?  if  
-      fhc-thc-unmap 0 b(to) mapped? 
-   then  
+
+: ?fhc-thc-unmap
+	mapped? if
+		fhc-thc-unmap
+		0 to mapped?
+	then
 ;
 
- 
-: fb-map h# 800000 /frame map-slot b(to) fb-addr ;
-: fb-unmap fb-addr /frame free-virtual -1 b(to) fb-addr ;
 
-: fbc-map h# 700000 h# 2000 map-slot b(to) fbc-adr fbc-adr h# 1000 + b(to) tec ;
-: fbc-unmap fbc-adr h# 2000 free-virtual -1 b(to) fbc-adr ;
+: fb-map 800000 /frame map-slot to fb-addr ;
+: fb-unmap fb-addr /frame free-virtual -1 to fb-addr ;
 
-: alt-map h# 280000 h# 2000 map-slot b(to) alt-adr ;
-: alt-unmap alt-adr h# 2000 free-virtual -1 b(to) alt-adr ;
+: fbc-map 700000 2000 map-slot to fbc-adr fbc-adr 1000 + to tec ;
+: fbc-unmap fbc-adr 2000 free-virtual -1 to fbc-adr ;
+
+: alt-map 280000 2000 map-slot to alt-adr ;
+: alt-unmap alt-adr 2000 free-virtual -1 to alt-adr ;
 
 
 : ?alt-map
-   alt-adr -1 =  if
-      -1 b(to) alt-mapped? alt-map
-   else 
-      0 b(to) alt-mapped? 
-   then  
+	alt-adr -1 = if
+		-1 to alt-mapped?
+		alt-map
+	else
+		0 to alt-mapped?
+	then
 ;
 
 
-: ?alt-unmap 
-   alt-mapped?  if  
-      alt-unmap 0 b(to) alt-mapped? 
-   then  
+: ?alt-unmap
+	alt-mapped? if
+		alt-unmap
+		0 to alt-mapped?
+	then
 ;
 
- 
-: color 
+
+: color
 	dup rot + swap
 	0 dac-adr l!
 
 	do
-		i c@ dup h# 18 lshift +
-		dac-adr h# 4 + l!
-	loop  
+		i c@ dup 18 lshift +
+		dac-adr 4 + l!
+	loop
 ;
 
- 
-: 3color! dac-adr l! swap rot 3 0 do dac-adr h# 4 + l! loop ;
+
+: 3color! dac-adr l! swap rot 3 0 do dac-adr 4 + l! loop ;
 
 : color! swap 0 dac! 2dup dac! 2dup dac! dac! ;
 
- 
-: lego-init-dac 
-   dac-map h# 4000000 0 dac! h# ff000000 h# 8 dac! h# 5000000 0 dac! 
-   h# 0 h# 8 dac! h# 6000000 0 dac! h# 43000000 h# 8 dac! h# 7000000 
-   0 dac! h# 0 h# 8 dac! h# 9000000 0 dac! h# 6000000 h# 8 dac! h# ff000000 
-   h# 0 h# 4 color! h# 0 h# ff000000 h# 4 color! h# ff000000 h# 1000000 
-   h# c color! h# 0 h# 2000000 h# c color! h# 0 h# 3000000 h# c color! 
-   h# 64000000 h# 41000000 h# b4000000 h# 1000000 3color! dac-unmap 
-   
+
+: lego-init-dac
+   dac-map 4000000 0 dac! ff000000 8 dac! 5000000 0 dac!
+   h# 0 8 dac! 6000000 0 dac! 43000000 8 dac! 7000000
+   0 dac! h# 0 8 dac! 9000000 0 dac! 6000000 8 dac! ff000000
+   h# 0 4 color! h# 0 ff000000 4 color! ff000000 1000000
+   c color! h# 0 2000000 c color! h# 0 3000000 c color!
+   64000000 41000000 b4000000 1000000 3color! dac-unmap
+
 ;
 
 
@@ -351,138 +385,156 @@ external
 headers
 
 
-: sense-code 
-   sense-id-value case 
-      h# 7 of r1152x900x66 endof 
-      h# 6 of r1152x900x76 endof 
-      h# 5 of r1024x768x60 endof 
-      h# 4 of r1152x900x76 endof 
-      3 of r1152x900x66 endof 
-      2 of r1280x1024x76 endof 
-      1 of r1600x1280x76 endof 
-      0 of r1024x768x77 endof 
-      drop r1152x900x66 0 
-   endcase 
+: sense-code
+   sense-id-value case
+      7 of r1152x900x66 endof
+      6 of r1152x900x76 endof
+      5 of r1024x768x60 endof
+      4 of r1152x900x76 endof
+      3 of r1152x900x66 endof
+      2 of r1280x1024x76 endof
+      1 of r1600x1280x76 endof
+      0 of r1024x768x77 endof
+      drop r1152x900x66 0
+   endcase
 ;
 
- 
-: ics-write 
+
+: ics-write
 	\ XXX: just guessing here, but it matches the ICS1562A datasheet
 	\ address of the register: negative edge on STROBE .  This is *not*
 	\ done on the LX's internal CG6.
 	dup
-	h# 1c lshift h# 0800.0000 or 0 alt!
-	h# 1c lshift                 0 alt!
+	1c lshift 0800.0000 or 0 alt!
+	1c lshift              0 alt!
 	\ data for the register: positive edge on STROBE
-	dup 
-	h# 1c lshift                 0 alt!
-	h# 1c lshift h# 0800.0000 or 0 alt! 
+	dup
+	1c lshift              0 alt!
+	1c lshift 0800.0000 or 0 alt!
 ;
 
 
-: ics47  0 1 0 h# a h# c h# f h# f 1 h# 8    2    0 0 h# 5 ;
-: ics54  0 1 0 h# a h# c h# f h# f 1 h# 8    2    2 0 h# 4 ;
-: ics64  0 1 0 h# a h# c h# f h# f 1 h# 8    2    1 0    3 ;
-: ics74  0 1 0 h# a h# d h# f h# f 1 h# 8 h# 4    3 0 h# 5 ;
-: ics81  0 1 0 h# a h# d h# f h# f 1 h# 8 h# 5    0 0 h# 6 ;
-: ics84  0 1 0 h# a h# d h# f h# f 1 h# 8    3    1 0    3 ;
-: ics94  0 1 0 h# a h# d h# f h# f 1 h# 8    2    0 0    2 ;
-: ics108 0 1 0 h# a h# d h# f h# f 1 h# 8 h# 4    2 0    3 ;
-: ics117 0 1 0 h# a h# d h# f h# f 1 h# 8    3    2 0    2 ;
-: ics135 0 1 0 h# a h# e h# f h# f 1 h# 8 h# 5 h# 4 0    3 ;
-: ics189 0 0 0 h# a h# d h# f h# f 1 h# 8    2    0 0    2 ;
-: ics216 0 0 0 h# a h# d h# f h# f 1 h# 8 h# 4    2 0    3 ;
+: ics47   0 1 0 a c f f 1 8 2 0 0 5 ;
+: ics54   0 1 0 a c f f 1 8 2 2 0 4 ;
+: ics64   0 1 0 a c f f 1 8 2 1 0 3 ;
+: ics74   0 1 0 a d f f 1 8 4 3 0 5 ;
+: ics81   0 1 0 a d f f 1 8 5 0 0 6 ;
+: ics84   0 1 0 a d f f 1 8 3 1 0 3 ;
+: ics94   0 1 0 a d f f 1 8 2 0 0 2 ;
+: ics108  0 1 0 a d f f 1 8 4 2 0 3 ;
+: ics117  0 1 0 a d f f 1 8 3 2 0 2 ;
+: ics135  0 1 0 a e f f 1 8 5 4 0 3 ;
+: ics189  0 0 0 a d f f 1 8 2 0 0 2 ;
+: ics216  0 0 0 a d f f 1 8 4 2 0 3 ;
 
 
-: oscillators 
-   h# 50775d8 h# 4d3f640 h# 46cf710 h# 3d27848 h# cdfe600 h# b43e940 
-   h# 80befc0 h# 6f94740 h# 66ff300 h# 5a1f4a0 h# 337f980 h# 2d0fa50 
-   h# c 
+: oscillators
+	d#  84.375.000
+	d#  81.000.000
+	d#  74.250.000
+	d#  64.125.000
+	d# 216.000.000
+	d# 189.000.000
+	d# 135.000.000
+	d# 117.000.000
+	d# 108.000.000
+	d#  94.500.000
+	d#  54.000.000
+	d#  47.250.000
+	c
 ;
 
- 
-: setup-oscillator-ad 
-   ?alt-map h# ff000000 0 alt! case 
-      0 of h# 0 0 alt! endof 
-      1 of h# 11000000 0 alt! endof 
-      2 of h# 22000000 0 alt! endof 
-      3 of h# 33000000 0 alt! endof 
-      h# 4 of h# 44000000 0 alt! endof 
-      h# 5 of h# 55000000 0 alt! endof 
-      h# 6 of h# 66000000 0 alt! endof 
-      h# 7 of h# 77000000 0 alt! endof 
-      h# 8 of h# 88000000 0 alt! endof 
-      h# 9 of h# 99000000 0 alt! endof 
-      h# a of h# aa000000 0 alt! endof 
-      h# 22000000 0 alt! 
-   endcase 
-   h# 94 thc@ h# 40 or dup h# 94 thc! b(to) strap-value 1 ms ?alt-unmap 
+
+: setup-oscillator-ad
+	?alt-map
+
+	ff00.0000 0 alt!
+
+	case
+	0 of  0000.0000 0 alt!  endof
+	1 of  1100.0000 0 alt!  endof
+	2 of  2200.0000 0 alt!  endof
+	3 of  3300.0000 0 alt!  endof
+	4 of  4400.0000 0 alt!  endof
+	5 of  5500.0000 0 alt!  endof
+	6 of  6600.0000 0 alt!  endof
+	7 of  7700.0000 0 alt!  endof
+	8 of  8800.0000 0 alt!  endof
+	9 of  9900.0000 0 alt!  endof
+	a of  aa00.0000 0 alt!  endof
+	      2200.0000 0 alt!
+	endcase
+
+	94 thc@ 40 or dup 94 thc! to strap-value
+
+	1 ms
+	?alt-unmap
 ;
 
- 
-: setup-oscillator 
-	?alt-map case 
-		0 of ics47 endof 
-		1 of ics54 endof 
-		2 of ics94 endof 
-		3 of ics108 endof 
-		h# 4 of ics117 endof 
-		h# 5 of ics135 endof 
-		h# 6 of ics189 endof 
-		h# 7 of ics216 endof 
-		h# 8 of ics64 endof 
-		h# 9 of ics74 endof 
-		h# a of ics81 endof 
-		h# b of ics84 endof 
-		drop ics94 0 
-	endcase 
 
-	0 h# d ics-write
+: setup-oscillator
+	?alt-map case
+		0 of  ics47   endof
+		1 of  ics54   endof
+		2 of  ics94   endof
+		3 of  ics108  endof
+		4 of  ics117  endof
+		5 of  ics135  endof
+		6 of  ics189  endof
+		7 of  ics216  endof
+		8 of  ics64   endof
+		9 of  ics74   endof
+		a of  ics81   endof
+		b of  ics84   endof
+		drop  ics94 0
+	endcase
 
-	h# d 0 do
+	0 d ics-write
+
+	d 0 do
 		i ics-write
 	loop
 
-	0 h# f ics-write 
+	0 f ics-write
 
 	\ 32 writes as required by the datasheet to enable ICS1562A!
-	h# 20 0 do
-		0 h# d ics-write
+	20 0 do
+		0 d ics-write
 	loop
 
-	h# 94 thc@
-	h# 40 or dup h# 94 thc! b(to) strap-value
+	94 thc@
+	40 or dup 94 thc! to strap-value
 
 	1 ms
 
-	?alt-unmap 
+	?alt-unmap
 ;
 
- 
-variable dpl  
- 
-: upper 
-   bounds ?do  i dup c@ upc swap c! loop  
+
+variable dpl
+
+: upper
+   bounds ?do  i dup c@ upc swap c! loop
 ;
 
- 
-: compare-strings 
-   rot tuck <  if  
-      drop 2drop 0 
-   else 
-      comp 0= 
-   then  
+
+: compare-strings
+   rot tuck < if
+      drop 2drop 0
+   else
+      comp 0=
+   then
 ;
 
- 
+
 : long? dpl @ 1 + 0<> ;
 
- 
-: convert 
-	begin  
-		1 + dup >r c@ h# a digit
-	while 
-		>r h# a * r> +
+
+: convert
+	begin
+		1 + dup >r c@ a digit
+	while
+		>r a * r> +
 		long? if
 			1 dpl +!
 		then
@@ -491,76 +543,77 @@ variable dpl
 	drop r>
 ;
 
- 
-: number? 
-   >r 0 r@ dup 1 + c@ h# 2d = dup >r - -1 dpl ! begin  
-      convert dup c@ h# 2e = 
-   while 
-      0 dpl ! 
-   repeat r> if  
-      swap negate swap 
-   then r> count + = 
+
+: number?
+   >r 0 r@ dup 1 + c@ 2d = dup >r - -1 dpl ! begin
+      convert dup c@ 2e =
+   while
+      0 dpl !
+   repeat r> if
+      swap negate swap
+   then r> count + =
 ;
 
- 
+
 : number number? drop ;
- 
+
 : /string over min >r swap r@ + swap r> - ;
 : +string 1 + ;
 : -string swap 1 + swap 1 - ;
 
- 
-: left-parse-string 
+
+: left-parse-string
    >r over 0 2swap
-   begin  
-      dup 
-   while 
+   begin
+      dup
+   while
       over c@ r@ = if
-         r> drop -string 2swap exit 
+         r> drop -string 2swap exit
       then
-      2swap +string 2swap -string 
+      2swap +string 2swap -string
    repeat
-   2swap r> drop 
+   2swap r> drop
 ;
 
- 
-: left-parse-string' 
-   left-parse-string 2 pick 0=  if  
-      2swap 
-   then  
+
+: left-parse-string'
+   left-parse-string 2 pick 0= if
+      2swap
+   then
 ;
 
- 
-variable cal-tmp  
-variable osc-tmp  
+
+variable cal-tmp
+variable osc-tmp
 variable confused?
 
-h# 100 alloc-mem constant tmp-monitor-string 
-h# 100 alloc-mem constant tmp-pack-string 
+100 alloc-mem constant tmp-monitor-string
+100 alloc-mem constant tmp-pack-string
 
- 
-variable tmp-monitor-len  
- 
+
+variable tmp-monitor-len
+
 
 external
 
-: monitor-string 
-   tmp-monitor-string tmp-monitor-len @ 
+: monitor-string
+   tmp-monitor-string tmp-monitor-len @
 ;
 
 headers
 
- 
-: flag-strings 
-   " STEREO" " 0OFFSET" " OVERSCAN" " GRAY" h# 4 
+
+: flag-strings
+   " STEREO" " 0OFFSET" " OVERSCAN" " GRAY" 4
 ;
 
- 
-: mainosc? 
-	-1 confused? ! h# 3e8 / osc-tmp !
+
+: mainosc?
+	-1 confused? !
+	3e8 / osc-tmp !
 
 	oscillators 0 do
-		h# 3e8 /
+		3e8 /
 		osc-tmp @ = if
 			i setup-oscillator
 			0 confused? !
@@ -568,166 +621,187 @@ headers
 	loop
 ;
 
- 
-: parse-string 
-   b(to) tmp-len b(to) tmp-addr b(to) tmp-flag flag-strings 0 do  
-   tmp-addr tmp-len 2swap compare-strings  if  
-      1 i lshift tmp-flag + b(to) tmp-flag 
-   then  loop  tmp-flag 
+
+: parse-string
+   to tmp-len to tmp-addr to tmp-flag flag-strings 0 do
+   tmp-addr tmp-len 2swap compare-strings if
+      1 i lshift tmp-flag + to tmp-flag
+   then  loop  tmp-flag
 ;
 
- 
-: parse-flags 
-   0 >r begin  
-      h# 2c left-parse-string r> -rot parse-string >r dup 0= 
+
+: parse-flags
+   0 >r begin
+      2c left-parse-string r> -rot parse-string >r dup 0=
    until
    2drop r>
 ;
 
- 
-: parse-line 
-   h# b 0 do  h# 2c left-parse-string tmp-pack-string pack dup number 
-   swap drop -rot dup 0=  if  
-      leave 
-   then  loop  dup 0<>  if  
-      parse-flags 
-   else 
-      2drop 0 
-   then  
+
+: parse-line
+   b 0 do  2c left-parse-string tmp-pack-string pack dup number
+   swap drop -rot dup 0= if
+      leave
+   then  loop  dup 0<> if
+      parse-flags
+   else
+      2drop 0
+   then
 ;
 
- 
-: cycles-per-tran 
-   h# 1add30 ppc * /mod swap 0<>  if  
-      1 + 
-   then  h# 4 - dup h# f >  if  
-      drop h# f 
-   then  
+
+: cycles-per-tran
+   1add30 ppc * /mod swap 0<> if
+      1 +
+   then  4 - dup f > if
+      drop f
+   then
 ;
 
- 
-: vert 
-   b(to) display-height rot dup my-xdrint " vfporch" my-attribute 
-   1 - dup h# c0 thc! rot dup my-xdrint " vsync" my-attribute + dup 
-   h# c4 thc! swap dup my-xdrint " vbporch" my-attribute + dup h# c8 
-   thc! display-height + h# cc thc! 
+
+: vert
+   to display-height rot dup my-xdrint " vfporch" my-attribute
+   1 - dup c0 thc! rot dup my-xdrint " vsync" my-attribute + dup
+   c4 thc! swap dup my-xdrint " vbporch" my-attribute + dup c8
+   thc! display-height + cc thc!
 ;
 
- 
-: horz 
-   b(to) display-width rot dup my-xdrint " hfporch" my-attribute 
-   dup ppc / 1 - dup h# a0 thc! 3 pick dup my-xdrint " hsync" my-attribute 
-   ppc / + dup h# a4 thc! rot dup my-xdrint " hbporch" my-attribute 
-   ppc / + dup h# a8 thc! display-width ppc / + dup h# b0 thc! -rot 
-   - ppc / - h# ac thc! 
+
+: horz
+   to display-width rot dup my-xdrint " hfporch" my-attribute
+   dup ppc / 1 - dup a0 thc! 3 pick dup my-xdrint " hsync" my-attribute
+   ppc / + dup a4 thc! rot dup my-xdrint " hbporch" my-attribute
+   ppc / + dup a8 thc! display-width ppc / + dup b0 thc! -rot
+   - ppc / - ac thc!
 ;
 
- 
-: fbc-res 
-	display-width h# 400 < if
-		h# 94 thc@
-		h# 800000 or h# 94 thc!
-		display-width 2 * 
-	else 
-		h# 94 thc@
-		h# 800000 invert and
-		h# 94 thc!
+
+: fbc-res
+	display-width 400 < if
+		94 thc@
+		800000 or 94 thc!
+		display-width 2 *
+	else
+		94 thc@
+		800000 invert and
+		94 thc!
 		display-width
 	then
 
 	case
-		h# 400 of h# ffffe3ff 0 fhc@ and 0 fhc! endof 
-		h# 480 of h# ffffe3ff 0 fhc@ and h# 800 or 0 fhc! endof 
-		h# 500 of h# ffffe3ff 0 fhc@ and h# 1000 or 0 fhc! endof 
-		h# 800 of h# ffffe3ff 0 fhc@ and h# 1400 or 0 fhc! endof 
-		h# 640 of h# ffffe3ff 0 fhc@ and h# 1800 or 0 fhc! endof 
-		h# 780 of h# ffffe3ff 0 fhc@ and h# 400 or 0 fhc! endof 
-		0 b(to) acceleration 
-	endcase 
+	d# 1024 of  ffff.e3ff 0 fhc@ and         0 fhc!  endof
+	d# 1152 of  ffff.e3ff 0 fhc@ and 0800 or 0 fhc!  endof
+	d# 1280 of  ffff.e3ff 0 fhc@ and 1000 or 0 fhc!  endof
+	d# 2048 of  ffff.e3ff 0 fhc@ and 1400 or 0 fhc!  endof
+	d# 1600 of  ffff.e3ff 0 fhc@ and 1800 or 0 fhc!  endof
+	d# 1920 of  ffff.e3ff 0 fhc@ and 0400 or 0 fhc!  endof
+	            0 to acceleration
+	endcase
 
-	cal-tmp @ h# 4 and 0<> if
-		h# 94 thc@ h# 80 or h# 94 thc!
+	cal-tmp @ 4 and 0<> if
+		94 thc@  80 or          94 thc!
 	else
-		h# 94 thc@ h# 80 invert and h# 94 thc!
+		94 thc@  80 invert and  94 thc!
 	then
 ;
 
- 
-: cal-tim 
-   cal-tmp ! vert horz my-xdrint " vfreq" my-attribute my-xdrint 
-   " hfreq" my-attribute dup my-xdrint " pixfreq" my-attribute dup 
-   mainosc? cycles-per-tran h# 818 thc@ h# fffffff0 and or h# 818 
-   thc! 0 b(to) dblbuf? h# 94 thc@ h# 2000000 invert and display-width 
-   display-height * 2 * /vmsize h# 100000 * <=  if  
-      h# 2000000 or 1 b(to) dblbuf? 
-   then  h# 94 thc! fbc-res bdrev my-xdrint " boardrev" my-attribute 
-   cal-tmp @ my-xdrint " montype" my-attribute acceleration  if  
-      " cgsix" 
-   else 
-      " cgthree+" 
-   then  my-xdrstring " emulation" my-attribute 
+
+: cal-tim
+	cal-tmp !
+
+	vert horz
+	my-xdrint " vfreq" my-attribute
+	my-xdrint " hfreq" my-attribute
+	dup my-xdrint " pixfreq" my-attribute
+
+	dup mainosc? cycles-per-tran
+
+	818 thc@ ffff.fff0 and or 818 thc!
+
+	0 to dblbuf?
+	94 thc@ 0200.0000 invert and
+
+	display-width display-height * 2 * /vmsize 100000 * <= if
+		0200.0000 or 1 to dblbuf?
+	then
+
+	94 thc!
+
+	fbc-res
+
+	bdrev my-xdrint " boardrev" my-attribute
+
+	cal-tmp @
+	my-xdrint " montype" my-attribute
+
+	acceleration if
+		" cgsix"
+	else
+		" cgthree+"
+	then
+	my-xdrstring " emulation" my-attribute
 ;
 
- 
+
 external
 
-: update-string 
+: update-string
 	2dup tmp-monitor-string swap move dup tmp-monitor-len !
 ;
 
 headers
 
- 
-: set-fbconfiguration 
-   update-string parse-line cal-tim 
+
+: set-fbconfiguration
+   update-string parse-line cal-tim
 ;
 
 
-' set-fbconfiguration b(to) (set-fbconfiguration
-' confused? b(to) (confused? 
- 
+' set-fbconfiguration to (set-fbconfiguration
+' confused? to (confused?
+
 
 : enable-disables ;
 : disable-disables ;
 
- 
-: lego-init-hc 
+
+: lego-init-hc
 	?fhc-thc-map
 
-	h# 8000 0 fhc!
-	h# 1ff 0 fhc!
+	8000 0 fhc!
+	01ff 0 fhc!
 
 	chip-rev case
-	h# 5 of enable-disables 0 fhc@ h# 10000 or 0 fhc! disable-disables endof
-	h# 6 of enable-disables 0 fhc@ h# 10000 or 0 fhc! disable-disables endof
-	h# 7 of enable-disables 0 fhc@ h# 10000 or 0 fhc! disable-disables endof
-	h# 8 of enable-disables 0 fhc@ h# 10000 or 0 fhc! disable-disables endof
-	enable-disables 0 fhc@ h# 10000 or 0 fhc! disable-disables
+	5 of  enable-disables 0 fhc@ 10000 or 0 fhc! disable-disables  endof
+	6 of  enable-disables 0 fhc@ 10000 or 0 fhc! disable-disables  endof
+	7 of  enable-disables 0 fhc@ 10000 or 0 fhc! disable-disables  endof
+	8 of  enable-disables 0 fhc@ 10000 or 0 fhc! disable-disables  endof
+	      enable-disables 0 fhc@ 10000 or 0 fhc! disable-disables
 	endcase
 
-	h# ffe0ffe0 h# 8fc thc!
+	ffe0.ffe0 8fc thc!
 
-	?fhc-thc-unmap 
+	?fhc-thc-unmap
 ;
 
- 
-: logo@ 0 swap h# 4 0 do  dup c@ rot h# 8 lshift + swap 1 + loop  drop ;
 
- 
-: cg6-move-line 
-   2 pick 2 pick 2 pick rot move 
+: logo@ 0 swap 4 0 do  dup c@ rot 8 lshift + swap 1 + loop  drop ;
+
+
+: cg6-move-line
+   2 pick 2 pick 2 pick rot move
 ;
 
- 
-: move-image-to-fb 
-   rot 0 do  cg6-move-line display-width + swap 2 pick + swap loop  
-   drop 2drop 
+
+: move-image-to-fb
+   rot 0 do  cg6-move-line display-width + swap 2 pick + swap loop
+   drop 2drop
 ;
 
- 
+
 : lego-draw-logo
 
-	2 pick h# 92 +
+	2 pick 92 +
 	logo@
 
 	bfdfdfe7 <> if
@@ -736,7 +810,7 @@ headers
 		prom-map
 
 		dac-map
-		h# 100 3 * logo-data h# 4 + color
+		100 3 * logo-data 4 + color
 		dac-unmap
 
 		drop 2drop
@@ -745,7 +819,7 @@ headers
 		rot
 
 		logo-data
-		h# 100 3 * + h# 4 + swap char-height * window-top + display-width * window-left + fb-addr +
+		100 3 * + 4 + swap char-height * window-top + display-width * window-left + fb-addr +
 
 		move-image-to-fb
 
@@ -753,117 +827,146 @@ headers
 	then
 ;
 
- 
-: diagnostic-type 
-   diagnostic-mode?  if  
-      type cr 
-   else 
-      2drop 
-   then  
+
+: diagnostic-type
+	diagnostic-mode? if
+		type cr
+	else
+		2drop
+	then
 ;
 
- 
-: ?lego-error 
-   2swap <>  if  
-      2 b(to) lego-status diagnostic-type "  r/w failed" 
-   else 
-      2drop 
-   then  
+
+: ?lego-error
+   2swap <> if
+      2 to lego-status diagnostic-type "  r/w failed"
+   else
+      2drop
+   then
 ;
 
- 
-: lego-register-test 
-   selftest-map  if  
-      fb-map 
-   then  h# 8 fbc@ h# 35 h# 100 fbc! h# ca h# 104 fbc! h# 12345678 
-   h# 110 fbc! h# 96969696 h# 84 fbc! h# 69696969 h# 80 fbc! h# 3c3c3c3c 
-   h# 90 fbc! h# a980cccc h# 108 fbc! h# ff h# 10c fbc! 0 h# e0 fbc! 
-   h# 0 h# e4 fbc! display-width 1 - h# f0 fbc! display-height 1 
-   - h# f4 fbc! h# 14aac0 h# 4 fbc! h# 0 h# 8 fbc! h# 0 h# 4 tec! 
-   "  FBC register test" diagnostic-type h# 100 fbc@ h# 35 " FBC_FCOLOR" 
-   ?lego-error h# 104 fbc@ h# ca " FBC_BCOLOR" ?lego-error h# 110 
-   fbc@ h# 12345678 " FBC_PIXELMASK" ?lego-error h# 84 fbc@ h# 96969696 
-   " FBC_Y0" ?lego-error h# 80 fbc@ h# 69696969 " FBC_X0" ?lego-error 
-   h# 90 fbc@ h# 3c3c3c3c " FBC_RASTEROP" ?lego-error h# ff h# 110 
-   fbc! 0 h# 84 fbc! 0 h# 80 fbc! h# 1f h# 90 fbc! h# 55555555 h# 1c 
-   fbc! h# 8 fbc! selftest-map  if  
-      fb-unmap 
-   then  
+
+: lego-register-test
+   selftest-map if
+      fb-map
+   then  8 fbc@ 35 100 fbc! ca 104 fbc! 12345678
+   110 fbc! 96969696 84 fbc! 69696969 80 fbc! 3c3c3c3c
+   90 fbc! a980cccc 108 fbc! ff 10c fbc! 0 e0 fbc!
+   h# 0 e4 fbc! display-width 1 - f0 fbc! display-height 1
+   - f4 fbc! 14aac0 4 fbc! h# 0 8 fbc! h# 0 4 tec!
+   "  FBC register test" diagnostic-type 100 fbc@ 35 " FBC_FCOLOR"
+   ?lego-error 104 fbc@ ca " FBC_BCOLOR" ?lego-error 110
+   fbc@ 12345678 " FBC_PIXELMASK" ?lego-error 84 fbc@ 96969696
+   " FBC_Y0" ?lego-error 80 fbc@ 69696969 " FBC_X0" ?lego-error
+   90 fbc@ 3c3c3c3c " FBC_RASTEROP" ?lego-error ff 110
+   fbc! 0 84 fbc! 0 80 fbc! 1f 90 fbc! 55555555 1c
+   fbc! 8 fbc! selftest-map if
+      fb-unmap
+   then
 ;
 
- 
-: lego-fbc-test 
-   selftest-map  if  
-      fb-map 
-   then  "  Font test" diagnostic-type h# 8 0 do  i h# 4 * fb-addr 
-   + @ h# ff00ff <>  if  
-      1 b(to) lego-status " Fonting to DFB error" diagnostic-type 
-      
-   then  loop  selftest-map  if  
-      fb-unmap 
-   then  
+
+: lego-fbc-test
+   selftest-map if
+      fb-map
+   then  "  Font test" diagnostic-type 8 0 do  i 4 * fb-addr
+   + @ ff00ff <> if
+      1 to lego-status " Fonting to DFB error" diagnostic-type
+
+   then  loop  selftest-map if
+      fb-unmap
+   then
 ;
 
- 
-: lego-fb-test 
-   selftest-map  if  
-      fb-map 
-   then  h# ffffffff mask ! 0 group-code ! fb-addr /frame memory-test-suite 
-    if  
-      1 b(to) lego-status 
-   then  selftest-map  if  
-      fb-unmap 
-   then  
+
+: lego-fb-test
+   selftest-map if
+      fb-map
+   then  ffffffff mask ! 0 group-code ! fb-addr /frame memory-test-suite
+ if
+      1 to lego-status
+   then  selftest-map if
+      fb-unmap
+   then
 ;
 
- 
-: lego-selftest 
-   fb-addr -1 =  if  
-      -1 b(to) selftest-map 
-   else 
-      0 b(to) selftest-map 
-   then  " Testing cgsix" diagnostic-type lego-register-test lego-fbc-test 
-   lego-fb-test lego-status 
+
+: lego-selftest
+   fb-addr -1 = if
+      -1 to selftest-map
+   else
+      0 to selftest-map
+   then  " Testing cgsix" diagnostic-type lego-register-test lego-fbc-test
+   lego-fb-test lego-status
 ;
 
- 
-: lego-blink-screen 
-   lego-video-off h# 20 ms lego-video-on 
+
+: lego-blink-screen
+   lego-video-off 20 ms lego-video-on
 ;
 
- 
+
 external
 
-: set-resolution 
-   $find  if  
-      execute 
-   then  lego-init-hc (set-fbconfiguration (confused? @  if  
-      sense-code (set-fbconfiguration 
-   then  lego-sync-reset lego-sync-on my-reset 0 =  if  
-      display-width dup dup encode-int " width" property
-      encode-int " linebytes" property
-      encode-int " awidth" property
-      display-height encode-int " height" property
-      h# 8 encode-int " depth" property
-      /vmsize encode-int " vmsize" property
-      dblbuf? encode-int " dblbuf" property
-   then  
+: set-resolution
+	$find if
+		execute
+	then
+
+	lego-init-hc
+	(set-fbconfiguration
+
+	(confused? @ if
+		sense-code
+		(set-fbconfiguration
+	then
+
+	lego-sync-reset
+	lego-sync-on
+
+	my-reset 0 = if
+		display-width dup dup
+		encode-int " width" property
+		encode-int " linebytes" property
+		encode-int " awidth" property
+
+		display-height
+		encode-int " height" property
+
+		8	encode-int " depth" property
+		/vmsize	encode-int " vmsize" property
+		dblbuf?	encode-int " dblbuf" property
+	then
 ;
 
- 
-: set-resolution-ext 
-   $find  if  
-      execute 
-   then  -1 b(to) my-reset lego-init-hc (set-fbconfiguration (confused? 
-   @  if  
-      sense-code (set-fbconfiguration 
-   then  lego-sync-reset lego-sync-on 0 b(to) my-reset display-width 
-   data-space l! display-height data-space h# 4 + l! h# 8 data-space 
-   h# 8 + l! display-width data-space h# c + l! acceleration data-space 
-   h# 10 + l! 
+
+: set-resolution-ext
+	$find if
+		execute
+	then
+
+	-1 to my-reset
+
+	lego-init-hc
+	(set-fbconfiguration
+
+	(confused? @ if
+	      sense-code (set-fbconfiguration
+	then
+
+	lego-sync-reset
+	lego-sync-on
+
+	0 to my-reset
+
+	display-width	data-space l!
+	display-height	data-space 4 + l!
+	8		data-space 8 + l!
+	display-width	data-space c + l!
+	acceleration	data-space 10 + l!
 ;
 
- 
+
 : override
 	sense-id-value = if
 		set-resolution
@@ -874,104 +977,105 @@ external
 
 headers
 
- 
-: lego-reset-screen 
-   -1 b(to) my-reset fcode-revision h# 2000 >=  if  
-      strap-value h# 94 thc! delay-value h# 90 thc! lego-erase-screen 
-      monitor-string set-resolution 
-   then  lego-video-on 0 b(to) my-reset 
+
+: lego-reset-screen
+   -1 to my-reset fcode-revision 2000 >= if
+      strap-value 94 thc! delay-value 90 thc! lego-erase-screen
+      monitor-string set-resolution
+   then  lego-video-on 0 to my-reset
 ;
 
- 
-: lego-draw-char 
-   fbc-busy-wait fb8-draw-character 
-;
 
- 
-: lego-toggle-cursor 
-   fbc-busy-wait fb8-toggle-cursor 
-;
+: lego-draw-char         fbc-busy-wait fb8-draw-character ;
+: lego-toggle-cursor     fbc-busy-wait fb8-toggle-cursor ;
+: lego-invert-screen     fbc-busy-wait fb8-invert-screen ;
+: lego-insert-characters fbc-busy-wait fb8-insert-characters ;
+: lego-delete-characters fbc-busy-wait fb8-delete-characters ;
 
- 
-: lego-invert-screen 
-   fbc-busy-wait fb8-invert-screen 
-;
+: dfb-delete-lines       fbc-busy-wait fb8-delete-lines ;
+: dfb-insert-lines       fbc-busy-wait fb8-insert-lines ;
+: dfb-erase-screen       fbc-busy-wait fb8-erase-screen ;
 
- 
-: lego-insert-characters 
-   fbc-busy-wait fb8-insert-characters 
-;
 
- 
-: lego-delete-characters 
-   fbc-busy-wait fb8-delete-characters 
-;
-
- 
-: dfb-delete-lines 
-   fbc-busy-wait fb8-delete-lines 
-;
-
- 
-: dfb-insert-lines 
-   fbc-busy-wait fb8-insert-lines 
-;
-
- 
-: dfb-erase-screen 
-   fbc-busy-wait fb8-erase-screen 
-;
-
- 
 external
 
-: reinstall-console 
-   display-width display-height over char-width / over char-height 
-   / fb8-install ['] lego-draw-logo b(to) draw-logo ['] lego-blink-screen 
-   b(to) blink-screen ['] lego-reset-screen b(to) reset-screen acceleration 
-    if  
-      ['] lego-delete-lines b(to) delete-lines ['] lego-insert-lines 
-      b(to) insert-lines ['] lego-erase-screen b(to) erase-screen 
-      
-   then  
+: reinstall-console
+	display-width display-height
+	over char-width / over char-height /
+	fb8-install
+
+	['] lego-draw-logo to draw-logo
+	['] lego-blink-screen to blink-screen
+	['] lego-reset-screen to reset-screen
+
+	acceleration if
+		['] lego-delete-lines to delete-lines
+		['] lego-insert-lines to insert-lines
+		['] lego-erase-screen to erase-screen
+	then
 ;
 
 headers
 
- 
-: lego-install 
-   fb-map init-blit-reg default-font set-font fb-addr b(to) frame-buffer-adr 
+
+: lego-install
+   fb-map init-blit-reg default-font set-font fb-addr to frame-buffer-adr
    fb-addr encode-int " address" property
-   my-args dup 0<>  if  
-      set-resolution 
-   else 
-      2drop 
-   then  reinstall-console lego-video-on 
+   my-args dup 0<> if
+      set-resolution
+   else
+      2drop
+   then  reinstall-console lego-video-on
 ;
 
- 
-: lego-remove 
-   lego-video-off fb-unmap -1 b(to) frame-buffer-adr 
+
+: lego-remove
+	lego-video-off
+	fb-unmap
+	-1 to frame-buffer-adr
 ;
 
- 
-: legoqs-probe 
-   my-address legosc-address ! fhc-thc-map fbc-map alt-map strap-value 
-   h# 94 thc! h# 100 ms delay-value h# 90 thc! fhc @ dup h# 18 rshift 
-   h# f and h# 7 swap - b(to) sense-id-value h# 14 rshift h# f and 
-   dup encode-int " chiprev" my-attribute b(to) chip-rev lego-sync-reset 
-   lego-sync-on " 74250000,64125000,216000000,189000000,135000000,117000000,108000000,94500000,54000000,47250000,81000000,84375000" 
-   encode-string " oscillators" my-attribute data-space encode-int 
-   " global-data" property
-   /frame encode-int " fbmapped" property
-   strap-value h# 8 and dup b(to) ppc 0=  if  
-      h# 4 b(to) ppc 
-   then  sense-code set-resolution lego-init-dac my-address my-space 
-   h# 1000000 reg h# 5 0 intr ['] lego-install is-install 
-   ['] lego-remove is-remove ['] lego-selftest is-selftest 
+
+: legoqs-probe
+	my-address legosc-address !
+
+	fhc-thc-map
+	fbc-map
+	alt-map
+	strap-value
+
+	94 thc!
+
+	100 ms delay-value
+
+	90 thc!
+	fhc @ dup 18 rshift f and 7 swap - to sense-id-value
+	14 rshift f and dup encode-int " chiprev" my-attribute to chip-rev
+
+	lego-sync-reset
+	lego-sync-on
+
+	" 74250000,64125000,216000000,189000000,135000000,117000000,108000000,94500000,54000000,47250000,81000000,84375000" encode-string " oscillators" my-attribute
+
+	data-space encode-int " global-data" property
+
+	/frame encode-int " fbmapped" property
+	strap-value 8 and dup to ppc 0= if
+		4 to ppc
+	then
+
+	sense-code set-resolution
+
+	lego-init-dac
+
+	my-address my-space 1000000 reg 5 0 intr
+
+	['] lego-install is-install
+	['] lego-remove is-remove
+	['] lego-selftest is-selftest
 ;
 
-legoqs-probe 
+legoqs-probe
 
-end0 
+end0
 
