@@ -1,7 +1,7 @@
 = SUN TurboGX+ Framebuffer VESA Mod
 Malte Dehling <mdehling@gmail.com>
 
-:imagesdir: https://raw.githubusercontent.com/1k5/tgx-plus-vesa-mod/main/img/
+:imagesdir: https://raw.githubusercontent.com/mdehling/tgx-plus-vesa-mod/main/img/
 
 
 This repository contains the EPROM for SUNs newer version TurboGX+ Framebuffer
